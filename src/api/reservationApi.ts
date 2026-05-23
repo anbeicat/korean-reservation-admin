@@ -1,0 +1,53 @@
+import { customers, initialReservations, services } from '../data/mockData'
+import type { NewReservationFormValues, Reservation, ReservationStatus, Service, ServiceFormValues } from '../types'
+
+// API 适配层：现在返回 mock 数据，后续可以在这里替换成 fetch / axios 请求。
+export function getReservationWorkspaceMock() {
+  return {
+    reservations: initialReservations,
+    services,
+    customers,
+  }
+}
+
+// 预约新增 API：目前在前端生成数据，接后端后改成 POST /reservations。
+export function createReservationMock(values: NewReservationFormValues): Reservation {
+  return {
+    id: Date.now(),
+    reservationDate: values.date.format('YYYY-MM-DD'),
+    time: values.time.format('HH:mm'),
+    customer: values.customer,
+    phone: values.phone,
+    serviceId: values.serviceId,
+    status: 'REQUESTED',
+    memo: values.memo,
+  }
+}
+
+// 预约状态更新 API：目前只返回更新后的对象，接后端后改成 PATCH /reservations/{id}/status。
+export function updateReservationStatusMock(reservation: Reservation, status: ReservationStatus): Reservation {
+  return {
+    ...reservation,
+    status,
+  }
+}
+
+// 服务新增 API：目前在前端生成服务，接后端后改成 POST /services。
+export function createServiceMock(values: ServiceFormValues): Service {
+  return {
+    id: `service-${Date.now()}`,
+    name: values.name,
+    duration: values.duration,
+    price: values.price,
+    bookings: 0,
+    status: 'ACTIVE',
+  }
+}
+
+// 服务上下架 API：模拟韩国门店后台里常见的 활성/비활성 状态切换。
+export function toggleServiceStatusMock(service: Service): Service {
+  return {
+    ...service,
+    status: service.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+  }
+}
