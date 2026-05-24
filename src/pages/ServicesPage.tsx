@@ -11,6 +11,7 @@ type ServicesPageProps = {
   isCreatingService: boolean
   actionServiceId: string | null
   onCreateService: (values: ServiceFormValues) => Promise<boolean>
+  onUpdateService: (serviceId: string, values: ServiceFormValues) => Promise<boolean>
   onToggleServiceStatus: (serviceId: string) => Promise<void>
 }
 
@@ -19,13 +20,16 @@ export function ServicesPage({
   isCreatingService,
   actionServiceId,
   onCreateService,
+  onUpdateService,
   onToggleServiceStatus,
 }: ServicesPageProps) {
   const [keyword, setKeyword] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingService, setEditingService] = useState<Service | null>(null)
   const [form] = Form.useForm<ServiceFormValues>()
 
   const filteredServices = services.filter((service) => service.name.toLowerCase().includes(keyword.trim().toLowerCase()))
+  const isSavingService = editingService ? actionServiceId === editingService.id : isCreatingService
 
   const columns: TableProps<Service>['columns'] = [
     {
@@ -59,9 +63,24 @@ export function ServicesPage({
       title: '작업',
       key: 'action',
       render: (_, service) => (
-        <Button loading={actionServiceId === service.id} onClick={() => onToggleServiceStatus(service.id)}>
-          {service.status === 'ACTIVE' ? '중지' : '재개'}
-        </Button>
+        <Space>
+          <Button
+            onClick={() => {
+              setEditingService(service)
+              form.setFieldsValue({
+                name: service.name,
+                duration: service.duration,
+                price: service.price,
+              })
+              setIsModalOpen(true)
+            }}
+          >
+            수정
+          </Button>
+          <Button loading={actionServiceId === service.id} onClick={() => onToggleServiceStatus(service.id)}>
+            {service.status === 'ACTIVE' ? '중지' : '재개'}
+          </Button>
+        </Space>
       ),
     },
   ]
@@ -78,7 +97,14 @@ export function ServicesPage({
               placeholder="서비스명 검색"
               onChange={(event) => setKeyword(event.target.value)}
             />
-            <Button type="primary" onClick={() => setIsModalOpen(true)}>
+            <Button
+              type="primary"
+              onClick={() => {
+                setEditingService(null)
+                form.resetFields()
+                setIsModalOpen(true)
+              }}
+            >
               서비스 추가
             </Button>
           </Space>
@@ -95,15 +121,28 @@ export function ServicesPage({
         />
       </Card>
 
-      <Modal title="서비스 추가" open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} destroyOnHidden>
+      <Modal
+        title={editingService ? '서비스 수정' : '서비스 추가'}
+        open={isModalOpen}
+        onCancel={() => {
+          setIsModalOpen(false)
+          setEditingService(null)
+          form.resetFields()
+        }}
+        footer={null}
+        destroyOnHidden
+      >
         <Form
           layout="vertical"
           form={form}
           onFinish={async (values) => {
-            const isCreated = await onCreateService(values)
+            const isSaved = editingService
+              ? await onUpdateService(editingService.id, values)
+              : await onCreateService(values)
 
-            if (isCreated) {
+            if (isSaved) {
               form.resetFields()
+              setEditingService(null)
               setIsModalOpen(false)
             }
           }}
@@ -117,8 +156,8 @@ export function ServicesPage({
           <Form.Item name="price" label="가격" rules={[{ required: true, message: '가격을 입력해 주세요' }]}>
             <InputNumber min={0} step={1000} addonBefore="₩" className="full-width" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" block loading={isCreatingService}>
-            서비스 등록
+          <Button type="primary" htmlType="submit" block loading={isSavingService}>
+            {editingService ? '서비스 수정' : '서비스 등록'}
           </Button>
         </Form>
       </Modal>

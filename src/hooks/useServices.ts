@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react'
-import { createServiceMock, toggleServiceStatusMock } from '../api/reservationApi'
+import { createServiceMock, toggleServiceStatusMock, updateServiceMock } from '../api/reservationApi'
 import type { Service, ServiceFormValues } from '../types'
 
 type UseServicesParams = {
   initialServices: Service[]
   onCreated?: () => void
+  onUpdated?: () => void
   onStatusChanged?: () => void
   onError?: (message: string) => void
 }
 
-export function useServices({ initialServices, onCreated, onStatusChanged, onError }: UseServicesParams) {
+export function useServices({ initialServices, onCreated, onUpdated, onStatusChanged, onError }: UseServicesParams) {
   const [services, setServices] = useState<Service[]>(initialServices)
   const [isCreatingService, setIsCreatingService] = useState(false)
   const [serviceActionId, setServiceActionId] = useState<string | null>(null)
@@ -38,6 +39,31 @@ export function useServices({ initialServices, onCreated, onStatusChanged, onErr
       return false
     } finally {
       setIsCreatingService(false)
+    }
+  }
+
+  // 服务编辑：修改服务名称、时长和价格。
+  async function updateService(serviceId: string, values: ServiceFormValues) {
+    const service = services.find((item) => item.id === serviceId)
+
+    if (!service) {
+      onError?.('서비스 정보를 찾을 수 없습니다')
+      return false
+    }
+
+    setServiceActionId(serviceId)
+
+    try {
+      const updatedService = await updateServiceMock(service, values)
+
+      setServices((current) => current.map((item) => (item.id === serviceId ? updatedService : item)))
+      onUpdated?.()
+      return true
+    } catch {
+      onError?.('서비스 정보 수정에 실패했습니다')
+      return false
+    } finally {
+      setServiceActionId(null)
     }
   }
 
@@ -71,6 +97,7 @@ export function useServices({ initialServices, onCreated, onStatusChanged, onErr
     isCreatingService,
     serviceActionId,
     createService,
+    updateService,
     toggleServiceStatus,
   }
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Dayjs } from 'dayjs'
-import { createReservationMock, updateReservationStatusMock } from '../api/reservationApi'
+import { createReservationMock, updateReservationMock, updateReservationStatusMock } from '../api/reservationApi'
 import type { NewReservationFormValues, Reservation, ReservationStatus } from '../types'
 import { nextStatus } from '../utils/reservation'
 
@@ -8,10 +8,17 @@ type UseReservationsParams = {
   initialReservations: Reservation[]
   onStatusChanged?: (status: ReservationStatus) => void
   onCreated?: () => void
+  onUpdated?: () => void
   onError?: (message: string) => void
 }
 
-export function useReservations({ initialReservations, onStatusChanged, onCreated, onError }: UseReservationsParams) {
+export function useReservations({
+  initialReservations,
+  onStatusChanged,
+  onCreated,
+  onUpdated,
+  onError,
+}: UseReservationsParams) {
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations)
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'ALL'>('ALL')
   const [dateFilter, setDateFilter] = useState<string | null>(null)
@@ -96,6 +103,32 @@ export function useReservations({ initialReservations, onStatusChanged, onCreate
     }
   }
 
+  // 预约编辑：保存顾客、服务、日期、时间和备注的修改。
+  async function updateReservation(id: number, values: NewReservationFormValues) {
+    const reservation = reservations.find((item) => item.id === id)
+
+    if (!reservation) {
+      onError?.('예약 정보를 찾을 수 없습니다')
+      return false
+    }
+
+    setReservationActionId(id)
+
+    try {
+      const updatedReservation = await updateReservationMock(reservation, values)
+
+      setReservations((current) => current.map((item) => (item.id === id ? updatedReservation : item)))
+      setSelectedReservation((current) => (current?.id === id ? updatedReservation : current))
+      onUpdated?.()
+      return true
+    } catch {
+      onError?.('예약 정보 수정에 실패했습니다')
+      return false
+    } finally {
+      setReservationActionId(null)
+    }
+  }
+
   // 筛选重置：清空关键词、日期和状态筛选。
   function resetReservationFilters() {
     setKeywordFilter('')
@@ -124,6 +157,7 @@ export function useReservations({ initialReservations, onStatusChanged, onCreate
     advanceReservation,
     cancelReservation,
     createReservation,
+    updateReservation,
     resetReservationFilters,
     handleDateFilterChange,
   }

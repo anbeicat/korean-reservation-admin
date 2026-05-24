@@ -18,6 +18,7 @@ type ReservationsPageProps = {
   onStatusFilterChange: (value: ReservationStatus | 'ALL') => void
   onResetFilters: () => void
   onOpenCreate: () => void
+  onOpenEdit: (reservation: Reservation) => void
   onSelectReservation: (reservation: Reservation) => void
   onAdvanceReservation: (id: number) => Promise<void>
   onCancelReservation: (id: number) => Promise<void>
@@ -35,6 +36,7 @@ export function ReservationsPage({
   onStatusFilterChange,
   onResetFilters,
   onOpenCreate,
+  onOpenEdit,
   onSelectReservation,
   onAdvanceReservation,
   onCancelReservation,
@@ -86,6 +88,9 @@ export function ReservationsPage({
         <Space>
           <Button size="small" onClick={() => onSelectReservation(reservation)}>
             상세
+          </Button>
+          <Button size="small" onClick={() => onOpenEdit(reservation)}>
+            수정
           </Button>
           <Button
             size="small"

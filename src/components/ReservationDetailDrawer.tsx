@@ -6,6 +6,7 @@ type ReservationDetailDrawerProps = {
   reservation: Reservation | null
   serviceById: Map<string, Service>
   onClose: () => void
+  onEdit: (reservation: Reservation) => void
   onAdvance: (id: number) => Promise<void>
   onCancelReservation: (id: number) => Promise<void>
   actionReservationId: number | null
@@ -15,6 +16,7 @@ export function ReservationDetailDrawer({
   reservation,
   serviceById,
   onClose,
+  onEdit,
   onAdvance,
   onCancelReservation,
   actionReservationId,
@@ -39,6 +41,7 @@ export function ReservationDetailDrawer({
           </Descriptions>
 
           <Space>
+            <Button onClick={() => onEdit(reservation)}>예약 수정</Button>
             <Button
               type="primary"
               disabled={!nextStatus[reservation.status]}

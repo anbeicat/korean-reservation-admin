@@ -47,6 +47,24 @@ export async function updateReservationStatusMock(
   }
 }
 
+// 预约编辑 API：接后端后改成 PATCH /reservations/{id}。
+export async function updateReservationMock(
+  reservation: Reservation,
+  values: NewReservationFormValues,
+): Promise<Reservation> {
+  await waitMockApi()
+
+  return {
+    ...reservation,
+    reservationDate: values.date.format('YYYY-MM-DD'),
+    time: values.time.format('HH:mm'),
+    customer: values.customer,
+    phone: values.phone,
+    serviceId: values.serviceId,
+    memo: values.memo,
+  }
+}
+
 // 服务新增 API：目前在前端生成服务，接后端后改成 POST /services。
 export async function createServiceMock(values: ServiceFormValues): Promise<Service> {
   await waitMockApi()
@@ -58,6 +76,18 @@ export async function createServiceMock(values: ServiceFormValues): Promise<Serv
     price: values.price,
     bookings: 0,
     status: 'ACTIVE',
+  }
+}
+
+// 服务编辑 API：接后端后改成 PATCH /services/{id}。
+export async function updateServiceMock(service: Service, values: ServiceFormValues): Promise<Service> {
+  await waitMockApi()
+
+  return {
+    ...service,
+    name: values.name,
+    duration: values.duration,
+    price: values.price,
   }
 }
 

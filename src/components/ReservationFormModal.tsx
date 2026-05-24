@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Alert, Button, DatePicker, Flex, Form, Input, Modal, Select, Space, TimePicker, Typography } from 'antd'
-import type { NewReservationFormValues, Service } from '../types'
+import dayjs from 'dayjs'
+import type { NewReservationFormValues, Reservation, Service } from '../types'
 import { formatWon } from '../utils/reservation'
 
 const { Text } = Typography
@@ -7,25 +9,54 @@ const { Text } = Typography
 type ReservationFormModalProps = {
   open: boolean
   services: Service[]
+  editingReservation: Reservation | null
   loading: boolean
   onCancel: () => void
-  onCreate: (values: NewReservationFormValues) => Promise<boolean>
+  onSubmit: (values: NewReservationFormValues) => Promise<boolean>
 }
 
-export function ReservationFormModal({ open, services, loading, onCancel, onCreate }: ReservationFormModalProps) {
+export function ReservationFormModal({
+  open,
+  services,
+  editingReservation,
+  loading,
+  onCancel,
+  onSubmit,
+}: ReservationFormModalProps) {
   const [form] = Form.useForm<NewReservationFormValues>()
   const selectedServiceId = Form.useWatch('serviceId', form)
   const selectedService = services.find((service) => service.id === selectedServiceId)
+  const isEditMode = Boolean(editingReservation)
+
+  useEffect(() => {
+    if (!open) {
+      form.resetFields()
+      return
+    }
+
+    if (editingReservation) {
+      form.setFieldsValue({
+        customer: editingReservation.customer,
+        phone: editingReservation.phone,
+        serviceId: editingReservation.serviceId,
+        date: dayjs(editingReservation.reservationDate),
+        time: dayjs(`${editingReservation.reservationDate}T${editingReservation.time}`),
+        memo: editingReservation.memo,
+      })
+    } else {
+      form.resetFields()
+    }
+  }, [editingReservation, form, open])
 
   return (
-    <Modal title="새 예약 등록" open={open} onCancel={onCancel} footer={null} destroyOnHidden>
+    <Modal title={isEditMode ? '예약 수정' : '새 예약 등록'} open={open} onCancel={onCancel} footer={null} destroyOnHidden>
       <Form
         layout="vertical"
         form={form}
         onFinish={async (values) => {
-          const isCreated = await onCreate(values)
+          const isSaved = await onSubmit(values)
 
-          if (isCreated) {
+          if (isSaved) {
             form.resetFields()
           }
         }}
@@ -81,7 +112,7 @@ export function ReservationFormModal({ open, services, loading, onCancel, onCrea
           <Input.TextArea rows={3} placeholder="고객 요청사항을 입력해 주세요" />
         </Form.Item>
         <Button type="primary" htmlType="submit" block loading={loading}>
-          예약 등록
+          {isEditMode ? '예약 수정' : '예약 등록'}
         </Button>
       </Form>
     </Modal>
