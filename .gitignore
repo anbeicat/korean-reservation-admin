@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+backend/.m2
+backend/target
 *.local
 verification-react-dashboard.png
 
