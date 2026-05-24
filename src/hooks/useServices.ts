@@ -10,6 +10,10 @@ type UseServicesParams = {
   onError?: (message: string) => void
 }
 
+function getErrorMessage(error: unknown, fallbackMessage: string) {
+  return error instanceof Error ? error.message : fallbackMessage
+}
+
 export function useServices({ initialServices, onCreated, onUpdated, onStatusChanged, onError }: UseServicesParams) {
   const [services, setServices] = useState<Service[]>(initialServices)
   const [isCreatingService, setIsCreatingService] = useState(false)
@@ -34,8 +38,8 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
       setServices((current) => [...current, response.data])
       onCreated?.()
       return true
-    } catch {
-      onError?.('새 서비스 등록에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '새 서비스 등록에 실패했습니다'))
       return false
     } finally {
       setIsCreatingService(false)
@@ -59,8 +63,8 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
       setServices((current) => current.map((item) => (item.id === serviceId ? response.data : item)))
       onUpdated?.()
       return true
-    } catch {
-      onError?.('서비스 정보 수정에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '서비스 정보 수정에 실패했습니다'))
       return false
     } finally {
       setServiceActionId(null)
@@ -83,8 +87,8 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
 
       setServices((current) => current.map((item) => (item.id === serviceId ? response.data : item)))
       onStatusChanged?.()
-    } catch {
-      onError?.('서비스 상태 변경에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '서비스 상태 변경에 실패했습니다'))
     } finally {
       setServiceActionId(null)
     }

@@ -1,23 +1,27 @@
 import { useState } from 'react'
-import { App as AntdApp } from 'antd'
+import { App as AntdApp, Spin } from 'antd'
 import './App.css'
-import { workspaceApi } from './api/reservationApi'
 import { AppShell } from './components/AppShell'
 import { ReservationDetailDrawer } from './components/ReservationDetailDrawer'
 import { ReservationFormModal } from './components/ReservationFormModal'
 import { useDashboardSummary } from './hooks/useDashboardSummary'
 import { useReservations } from './hooks/useReservations'
 import { useServices } from './hooks/useServices'
+import { useWorkspaceData } from './hooks/useWorkspaceData'
 import { CustomersPage } from './pages/CustomersPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ReservationsPage } from './pages/ReservationsPage'
 import { ServicesPage } from './pages/ServicesPage'
-import type { NewReservationFormValues, Reservation, ViewKey } from './types'
+import type { Customer, NewReservationFormValues, Reservation, Service, ViewKey } from './types'
 import { statusLabel } from './utils/reservation'
 
-const reservationWorkspace = workspaceApi.getInitialData().data
+type ReservationAdminProps = {
+  initialReservations: Reservation[]
+  initialServices: Service[]
+  customers: Customer[]
+}
 
-function ReservationAdmin() {
+function ReservationAdmin({ initialReservations, initialServices, customers }: ReservationAdminProps) {
   const { message } = AntdApp.useApp()
   const [activeView, setActiveView] = useState<ViewKey>('dashboard')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -42,7 +46,7 @@ function ReservationAdmin() {
     resetReservationFilters,
     handleDateFilterChange,
   } = useReservations({
-    initialReservations: reservationWorkspace.reservations,
+    initialReservations,
     onStatusChanged: (status) => message.success(`예약 상태가 ${statusLabel[status]} 상태로 변경되었습니다`),
     onCreated: () => {
       setIsModalOpen(false)
@@ -67,7 +71,7 @@ function ReservationAdmin() {
     updateService,
     toggleServiceStatus,
   } = useServices({
-    initialServices: reservationWorkspace.services,
+    initialServices,
     onCreated: () => message.success('새 서비스가 등록되었습니다'),
     onUpdated: () => message.success('서비스 정보가 수정되었습니다'),
     onStatusChanged: () => message.success('서비스 상태가 변경되었습니다'),
@@ -140,7 +144,7 @@ function ReservationAdmin() {
           />
         )}
 
-        {activeView === 'customers' && <CustomersPage customers={reservationWorkspace.customers} />}
+        {activeView === 'customers' && <CustomersPage customers={customers} />}
       </AppShell>
 
       <ReservationFormModal
@@ -169,9 +173,21 @@ function ReservationAdmin() {
 }
 
 function App() {
+  const { workspaceData, isLoadingWorkspace } = useWorkspaceData()
+
   return (
     <AntdApp>
-      <ReservationAdmin />
+      {isLoadingWorkspace || !workspaceData ? (
+        <div className="app-loading">
+          <Spin size="large" tip="데이터를 불러오는 중입니다" />
+        </div>
+      ) : (
+        <ReservationAdmin
+          initialReservations={workspaceData.reservations}
+          initialServices={workspaceData.services}
+          customers={workspaceData.customers}
+        />
+      )}
     </AntdApp>
   )
 }

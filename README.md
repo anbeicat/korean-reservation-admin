@@ -12,7 +12,7 @@
 - Ant Design
 - React Hooks
 - CSS Grid / Flex layout
-- Mock API adapter
+- REST API adapter with mock fallback
 - Java 21
 - Spring Boot 3
 - Maven
@@ -57,7 +57,7 @@
 
 ```text
 src/
-  api/                 # API 适配层，目前连接 mock 数据，后续可替换为真实后端请求
+  api/                 # API 适配层，优先连接 Spring Boot，后端不可用时回退 mock 数据
   components/          # 可复用 UI 组件
   data/                # mock 数据
   hooks/               # 业务状态和页面逻辑
@@ -71,6 +71,8 @@ backend/
 ```
 
 ## Local Setup
+
+前端可以单独运行；如果后端没有启动，`src/api/reservationApi.ts` 会自动回退到 mock 数据。
 
 ```bash
 npm install
@@ -88,6 +90,29 @@ http://127.0.0.1:5173/
 ```bash
 npm run build
 ```
+
+## Full Stack Setup
+
+推荐先启动后端，再启动前端：
+
+```bash
+cd backend
+mvn -Dmaven.repo.local=.m2 spring-boot:run
+```
+
+另开一个终端：
+
+```bash
+npm run dev
+```
+
+前端会优先请求：
+
+```text
+http://127.0.0.1:8080/api
+```
+
+如果后端未启动，前端会自动使用本地 mock fallback，方便演示和开发。
 
 ## Backend
 
@@ -132,7 +157,7 @@ GET    /api/customers
 
 ## Backend Plan
 
-当前 `src/api/reservationApi.ts` 使用 mock API adapter。后续接真实后端时，优先替换这一层，不需要大幅修改页面组件。
+当前 `src/api/reservationApi.ts` 已经接入 Spring Boot REST API，并保留 mock fallback。
 
 接口草案见 [docs/api-contract.md](docs/api-contract.md)。
 

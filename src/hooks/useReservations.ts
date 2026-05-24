@@ -12,6 +12,10 @@ type UseReservationsParams = {
   onError?: (message: string) => void
 }
 
+function getErrorMessage(error: unknown, fallbackMessage: string) {
+  return error instanceof Error ? error.message : fallbackMessage
+}
+
 export function useReservations({
   initialReservations,
   onStatusChanged,
@@ -101,8 +105,8 @@ export function useReservations({
       setReservations((current) => current.map((item) => (item.id === id ? response.data : item)))
       setSelectedReservation((current) => (current?.id === id ? response.data : current))
       onStatusChanged?.(status)
-    } catch {
-      onError?.('예약 상태 변경에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '예약 상태 변경에 실패했습니다'))
     } finally {
       setReservationActionId(null)
     }
@@ -128,8 +132,8 @@ export function useReservations({
       setReservations((current) => [...current, response.data])
       onCreated?.()
       return true
-    } catch {
-      onError?.('새 예약 등록에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '새 예약 등록에 실패했습니다'))
       return false
     } finally {
       setIsCreatingReservation(false)
@@ -164,8 +168,8 @@ export function useReservations({
       setSelectedReservation((current) => (current?.id === id ? response.data : current))
       onUpdated?.()
       return true
-    } catch {
-      onError?.('예약 정보 수정에 실패했습니다')
+    } catch (error) {
+      onError?.(getErrorMessage(error, '예약 정보 수정에 실패했습니다'))
       return false
     } finally {
       setReservationActionId(null)

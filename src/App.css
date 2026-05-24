@@ -112,6 +112,13 @@
   width: 100%;
 }
 
+.app-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  background: #f5f7fb;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
