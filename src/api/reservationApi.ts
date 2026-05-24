@@ -3,6 +3,10 @@ import type { NewReservationFormValues, Reservation, ReservationStatus, Service,
 
 const MOCK_API_DELAY = 350
 
+type ApiResponse<T> = {
+  data: T
+}
+
 function waitMockApi() {
   return new Promise((resolve) => {
     window.setTimeout(resolve, MOCK_API_DELAY)
@@ -10,93 +14,117 @@ function waitMockApi() {
 }
 
 // API 适配层：现在返回 mock 数据，后续可以在这里替换成 fetch / axios 请求。
-export function getReservationWorkspaceMock() {
-  return {
-    reservations: initialReservations,
-    services,
-    customers,
-  }
+export const workspaceApi = {
+  getInitialData(): ApiResponse<{
+    reservations: Reservation[]
+    services: Service[]
+    customers: typeof customers
+  }> {
+    return {
+      data: {
+        reservations: initialReservations,
+        services,
+        customers,
+      },
+    }
+  },
 }
 
-// 预约新增 API：目前在前端生成数据，接后端后改成 POST /reservations。
-export async function createReservationMock(values: NewReservationFormValues): Promise<Reservation> {
-  await waitMockApi()
+export const reservationApi = {
+  // POST /api/reservations
+  async create(values: NewReservationFormValues): Promise<ApiResponse<Reservation>> {
+    await waitMockApi()
 
-  return {
-    id: Date.now(),
-    reservationDate: values.date.format('YYYY-MM-DD'),
-    time: values.time.format('HH:mm'),
-    customer: values.customer,
-    phone: values.phone,
-    serviceId: values.serviceId,
-    status: 'REQUESTED',
-    memo: values.memo,
-  }
+    return {
+      data: {
+        id: Date.now(),
+        reservationDate: values.date.format('YYYY-MM-DD'),
+        time: values.time.format('HH:mm'),
+        customer: values.customer,
+        phone: values.phone,
+        serviceId: values.serviceId,
+        status: 'REQUESTED',
+        memo: values.memo,
+      },
+    }
+  },
+
+  // PATCH /api/reservations/{id}/status
+  async updateStatus(
+    reservation: Reservation,
+    status: ReservationStatus,
+  ): Promise<ApiResponse<Reservation>> {
+    await waitMockApi()
+
+    return {
+      data: {
+        ...reservation,
+        status,
+      },
+    }
+  },
+
+  // PATCH /api/reservations/{id}
+  async update(
+    reservation: Reservation,
+    values: NewReservationFormValues,
+  ): Promise<ApiResponse<Reservation>> {
+    await waitMockApi()
+
+    return {
+      data: {
+        ...reservation,
+        reservationDate: values.date.format('YYYY-MM-DD'),
+        time: values.time.format('HH:mm'),
+        customer: values.customer,
+        phone: values.phone,
+        serviceId: values.serviceId,
+        memo: values.memo,
+      },
+    }
+  },
 }
 
-// 预约状态更新 API：目前只返回更新后的对象，接后端后改成 PATCH /reservations/{id}/status。
-export async function updateReservationStatusMock(
-  reservation: Reservation,
-  status: ReservationStatus,
-): Promise<Reservation> {
-  await waitMockApi()
+export const serviceApi = {
+  // POST /api/services
+  async create(values: ServiceFormValues): Promise<ApiResponse<Service>> {
+    await waitMockApi()
 
-  return {
-    ...reservation,
-    status,
-  }
-}
+    return {
+      data: {
+        id: `service-${Date.now()}`,
+        name: values.name,
+        duration: values.duration,
+        price: values.price,
+        bookings: 0,
+        status: 'ACTIVE',
+      },
+    }
+  },
 
-// 预约编辑 API：接后端后改成 PATCH /reservations/{id}。
-export async function updateReservationMock(
-  reservation: Reservation,
-  values: NewReservationFormValues,
-): Promise<Reservation> {
-  await waitMockApi()
+  // PATCH /api/services/{id}
+  async update(service: Service, values: ServiceFormValues): Promise<ApiResponse<Service>> {
+    await waitMockApi()
 
-  return {
-    ...reservation,
-    reservationDate: values.date.format('YYYY-MM-DD'),
-    time: values.time.format('HH:mm'),
-    customer: values.customer,
-    phone: values.phone,
-    serviceId: values.serviceId,
-    memo: values.memo,
-  }
-}
+    return {
+      data: {
+        ...service,
+        name: values.name,
+        duration: values.duration,
+        price: values.price,
+      },
+    }
+  },
 
-// 服务新增 API：目前在前端生成服务，接后端后改成 POST /services。
-export async function createServiceMock(values: ServiceFormValues): Promise<Service> {
-  await waitMockApi()
+  // PATCH /api/services/{id}/status
+  async toggleStatus(service: Service): Promise<ApiResponse<Service>> {
+    await waitMockApi()
 
-  return {
-    id: `service-${Date.now()}`,
-    name: values.name,
-    duration: values.duration,
-    price: values.price,
-    bookings: 0,
-    status: 'ACTIVE',
-  }
-}
-
-// 服务编辑 API：接后端后改成 PATCH /services/{id}。
-export async function updateServiceMock(service: Service, values: ServiceFormValues): Promise<Service> {
-  await waitMockApi()
-
-  return {
-    ...service,
-    name: values.name,
-    duration: values.duration,
-    price: values.price,
-  }
-}
-
-// 服务上下架 API：模拟韩国门店后台里常见的 활성/비활성 状态切换。
-export async function toggleServiceStatusMock(service: Service): Promise<Service> {
-  await waitMockApi()
-
-  return {
-    ...service,
-    status: service.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-  }
+    return {
+      data: {
+        ...service,
+        status: service.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+      },
+    }
+  },
 }

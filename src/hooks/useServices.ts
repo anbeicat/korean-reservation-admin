@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createServiceMock, toggleServiceStatusMock, updateServiceMock } from '../api/reservationApi'
+import { serviceApi } from '../api/reservationApi'
 import type { Service, ServiceFormValues } from '../types'
 
 type UseServicesParams = {
@@ -29,9 +29,9 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
     setIsCreatingService(true)
 
     try {
-      const createdService = await createServiceMock(values)
+      const response = await serviceApi.create(values)
 
-      setServices((current) => [...current, createdService])
+      setServices((current) => [...current, response.data])
       onCreated?.()
       return true
     } catch {
@@ -54,9 +54,9 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
     setServiceActionId(serviceId)
 
     try {
-      const updatedService = await updateServiceMock(service, values)
+      const response = await serviceApi.update(service, values)
 
-      setServices((current) => current.map((item) => (item.id === serviceId ? updatedService : item)))
+      setServices((current) => current.map((item) => (item.id === serviceId ? response.data : item)))
       onUpdated?.()
       return true
     } catch {
@@ -79,9 +79,9 @@ export function useServices({ initialServices, onCreated, onUpdated, onStatusCha
     setServiceActionId(serviceId)
 
     try {
-      const updatedService = await toggleServiceStatusMock(service)
+      const response = await serviceApi.toggleStatus(service)
 
-      setServices((current) => current.map((item) => (item.id === serviceId ? updatedService : item)))
+      setServices((current) => current.map((item) => (item.id === serviceId ? response.data : item)))
       onStatusChanged?.()
     } catch {
       onError?.('서비스 상태 변경에 실패했습니다')

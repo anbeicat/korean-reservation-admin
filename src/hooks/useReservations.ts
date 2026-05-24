@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Dayjs } from 'dayjs'
-import { createReservationMock, updateReservationMock, updateReservationStatusMock } from '../api/reservationApi'
+import { reservationApi } from '../api/reservationApi'
 import type { NewReservationFormValues, Reservation, ReservationStatus } from '../types'
 import { isValidBusinessTime, nextStatus } from '../utils/reservation'
 
@@ -96,10 +96,10 @@ export function useReservations({
     setReservationActionId(id)
 
     try {
-      const updatedReservation = await updateReservationStatusMock(reservation, status)
+      const response = await reservationApi.updateStatus(reservation, status)
 
-      setReservations((current) => current.map((item) => (item.id === id ? updatedReservation : item)))
-      setSelectedReservation((current) => (current?.id === id ? updatedReservation : current))
+      setReservations((current) => current.map((item) => (item.id === id ? response.data : item)))
+      setSelectedReservation((current) => (current?.id === id ? response.data : current))
       onStatusChanged?.(status)
     } catch {
       onError?.('예약 상태 변경에 실패했습니다')
@@ -123,9 +123,9 @@ export function useReservations({
     setIsCreatingReservation(true)
 
     try {
-      const createdReservation = await createReservationMock(values)
+      const response = await reservationApi.create(values)
 
-      setReservations((current) => [...current, createdReservation])
+      setReservations((current) => [...current, response.data])
       onCreated?.()
       return true
     } catch {
@@ -158,10 +158,10 @@ export function useReservations({
     setReservationActionId(id)
 
     try {
-      const updatedReservation = await updateReservationMock(reservation, values)
+      const response = await reservationApi.update(reservation, values)
 
-      setReservations((current) => current.map((item) => (item.id === id ? updatedReservation : item)))
-      setSelectedReservation((current) => (current?.id === id ? updatedReservation : current))
+      setReservations((current) => current.map((item) => (item.id === id ? response.data : item)))
+      setSelectedReservation((current) => (current?.id === id ? response.data : current))
       onUpdated?.()
       return true
     } catch {

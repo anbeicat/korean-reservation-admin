@@ -87,6 +87,8 @@ npm run build
 
 当前 `src/api/reservationApi.ts` 使用 mock API adapter。后续接后端时，优先替换这一层，不需要大幅修改页面组件。
 
+接口草案见 [docs/api-contract.md](docs/api-contract.md)。
+
 计划接口：
 
 ```text

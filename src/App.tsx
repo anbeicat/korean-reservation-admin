@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { App as AntdApp } from 'antd'
 import './App.css'
-import { getReservationWorkspaceMock } from './api/reservationApi'
+import { workspaceApi } from './api/reservationApi'
 import { AppShell } from './components/AppShell'
 import { ReservationDetailDrawer } from './components/ReservationDetailDrawer'
 import { ReservationFormModal } from './components/ReservationFormModal'
@@ -15,7 +15,7 @@ import { ServicesPage } from './pages/ServicesPage'
 import type { NewReservationFormValues, Reservation, ViewKey } from './types'
 import { statusLabel } from './utils/reservation'
 
-const reservationWorkspace = getReservationWorkspaceMock()
+const reservationWorkspace = workspaceApi.getInitialData().data
 
 function ReservationAdmin() {
   const { message } = AntdApp.useApp()
