@@ -28,6 +28,24 @@ export function useReservations({
   const [isCreatingReservation, setIsCreatingReservation] = useState(false)
   const [reservationActionId, setReservationActionId] = useState<number | null>(null)
 
+  // 预约冲突检查：同一天同一时间已有未取消预约时，不允许重复预约。
+  function hasReservationConflict(values: NewReservationFormValues, excludeReservationId?: number) {
+    const reservationDate = values.date.format('YYYY-MM-DD')
+    const time = values.time.format('HH:mm')
+
+    return reservations.some((reservation) => {
+      const isSameReservation = reservation.id === excludeReservationId
+      const isCanceled = reservation.status === 'CANCELED'
+
+      return (
+        !isSameReservation &&
+        !isCanceled &&
+        reservation.reservationDate === reservationDate &&
+        reservation.time === time
+      )
+    })
+  }
+
   // 派生数据：根据当前状态、日期、关键词筛选条件得到表格要显示的预约。
   const filteredReservations = useMemo(() => {
     const normalizedKeyword = keywordFilter.trim().toLowerCase()
@@ -87,6 +105,11 @@ export function useReservations({
 
   // 新增预约：通过 API 适配层创建预约对象，再追加到列表 state。
   async function createReservation(values: NewReservationFormValues) {
+    if (hasReservationConflict(values)) {
+      onError?.('이미 같은 시간에 예약이 있습니다')
+      return false
+    }
+
     setIsCreatingReservation(true)
 
     try {
@@ -109,6 +132,11 @@ export function useReservations({
 
     if (!reservation) {
       onError?.('예약 정보를 찾을 수 없습니다')
+      return false
+    }
+
+    if (hasReservationConflict(values, id)) {
+      onError?.('이미 같은 시간에 예약이 있습니다')
       return false
     }
 

@@ -108,6 +108,7 @@ export function ReservationFormModal({
             <TimePicker format="HH:mm" className="full-width" />
           </Form.Item>
         </Flex>
+        <Alert type="warning" showIcon message="같은 날짜와 시간에는 하나의 예약만 등록할 수 있습니다" />
         <Form.Item name="memo" label="요청 메모">
           <Input.TextArea rows={3} placeholder="고객 요청사항을 입력해 주세요" />
         </Form.Item>
