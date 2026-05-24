@@ -6,8 +6,9 @@ type ReservationDetailDrawerProps = {
   reservation: Reservation | null
   serviceById: Map<string, Service>
   onClose: () => void
-  onAdvance: (id: number) => void
-  onCancelReservation: (id: number) => void
+  onAdvance: (id: number) => Promise<void>
+  onCancelReservation: (id: number) => Promise<void>
+  actionReservationId: number | null
 }
 
 export function ReservationDetailDrawer({
@@ -16,6 +17,7 @@ export function ReservationDetailDrawer({
   onClose,
   onAdvance,
   onCancelReservation,
+  actionReservationId,
 }: ReservationDetailDrawerProps) {
   return (
     <Drawer title="예약 상세" width={420} open={Boolean(reservation)} onClose={onClose}>
@@ -37,12 +39,18 @@ export function ReservationDetailDrawer({
           </Descriptions>
 
           <Space>
-            <Button type="primary" disabled={!nextStatus[reservation.status]} onClick={() => onAdvance(reservation.id)}>
+            <Button
+              type="primary"
+              disabled={!nextStatus[reservation.status]}
+              loading={actionReservationId === reservation.id}
+              onClick={() => onAdvance(reservation.id)}
+            >
               다음 상태로 변경
             </Button>
             <Button
               danger
               disabled={reservation.status === 'CANCELED'}
+              loading={actionReservationId === reservation.id}
               onClick={() => onCancelReservation(reservation.id)}
             >
               예약 취소

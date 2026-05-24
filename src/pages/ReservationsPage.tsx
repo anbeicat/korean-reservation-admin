@@ -19,8 +19,9 @@ type ReservationsPageProps = {
   onResetFilters: () => void
   onOpenCreate: () => void
   onSelectReservation: (reservation: Reservation) => void
-  onAdvanceReservation: (id: number) => void
-  onCancelReservation: (id: number) => void
+  onAdvanceReservation: (id: number) => Promise<void>
+  onCancelReservation: (id: number) => Promise<void>
+  actionReservationId: number | null
 }
 
 export function ReservationsPage({
@@ -37,6 +38,7 @@ export function ReservationsPage({
   onSelectReservation,
   onAdvanceReservation,
   onCancelReservation,
+  actionReservationId,
 }: ReservationsPageProps) {
   // 预约表格列：定义 Ant Design Table 每一列的展示方式。
   const columns: TableProps<Reservation>['columns'] = [
@@ -88,6 +90,7 @@ export function ReservationsPage({
           <Button
             size="small"
             disabled={!nextStatus[reservation.status]}
+            loading={actionReservationId === reservation.id}
             onClick={() => onAdvanceReservation(reservation.id)}
           >
             다음
@@ -96,6 +99,7 @@ export function ReservationsPage({
             size="small"
             danger
             disabled={reservation.status === 'CANCELED'}
+            loading={actionReservationId === reservation.id}
             onClick={() => onCancelReservation(reservation.id)}
           >
             취소

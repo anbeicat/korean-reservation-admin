@@ -29,6 +29,8 @@ function ReservationAdmin() {
     dateFilterValue,
     keywordFilter,
     selectedReservation,
+    isCreatingReservation,
+    reservationActionId,
     setStatusFilter,
     setKeywordFilter,
     setSelectedReservation,
@@ -45,12 +47,22 @@ function ReservationAdmin() {
       setActiveView('reservations')
       message.success('새 예약이 등록되었습니다')
     },
+    onError: (errorMessage) => message.error(errorMessage),
   })
 
-  const { services, serviceById, activeServices, createService, toggleServiceStatus } = useServices({
+  const {
+    services,
+    serviceById,
+    activeServices,
+    isCreatingService,
+    serviceActionId,
+    createService,
+    toggleServiceStatus,
+  } = useServices({
     initialServices: reservationWorkspace.services,
     onCreated: () => message.success('새 서비스가 등록되었습니다'),
     onStatusChanged: () => message.success('서비스 상태가 변경되었습니다'),
+    onError: (errorMessage) => message.error(errorMessage),
   })
 
   const summary = useDashboardSummary({ reservations, services, activeServices, serviceById })
@@ -83,12 +95,15 @@ function ReservationAdmin() {
             onSelectReservation={setSelectedReservation}
             onAdvanceReservation={advanceReservation}
             onCancelReservation={cancelReservation}
+            actionReservationId={reservationActionId}
           />
         )}
 
         {activeView === 'services' && (
           <ServicesPage
             services={services}
+            isCreatingService={isCreatingService}
+            actionServiceId={serviceActionId}
             onCreateService={createService}
             onToggleServiceStatus={toggleServiceStatus}
           />
@@ -100,6 +115,7 @@ function ReservationAdmin() {
       <ReservationFormModal
         open={isModalOpen}
         services={activeServices}
+        loading={isCreatingReservation}
         onCancel={() => setIsModalOpen(false)}
         onCreate={createReservation}
       />
@@ -110,6 +126,7 @@ function ReservationAdmin() {
         onClose={() => setSelectedReservation(null)}
         onAdvance={advanceReservation}
         onCancelReservation={cancelReservation}
+        actionReservationId={reservationActionId}
       />
     </>
   )

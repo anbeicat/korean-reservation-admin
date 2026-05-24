@@ -7,11 +7,12 @@ const { Text } = Typography
 type ReservationFormModalProps = {
   open: boolean
   services: Service[]
+  loading: boolean
   onCancel: () => void
-  onCreate: (values: NewReservationFormValues) => void
+  onCreate: (values: NewReservationFormValues) => Promise<boolean>
 }
 
-export function ReservationFormModal({ open, services, onCancel, onCreate }: ReservationFormModalProps) {
+export function ReservationFormModal({ open, services, loading, onCancel, onCreate }: ReservationFormModalProps) {
   const [form] = Form.useForm<NewReservationFormValues>()
   const selectedServiceId = Form.useWatch('serviceId', form)
   const selectedService = services.find((service) => service.id === selectedServiceId)
@@ -21,9 +22,12 @@ export function ReservationFormModal({ open, services, onCancel, onCreate }: Res
       <Form
         layout="vertical"
         form={form}
-        onFinish={(values) => {
-          onCreate(values)
-          form.resetFields()
+        onFinish={async (values) => {
+          const isCreated = await onCreate(values)
+
+          if (isCreated) {
+            form.resetFields()
+          }
         }}
       >
         <Form.Item name="customer" label="고객명" rules={[{ required: true, message: '고객명을 입력해 주세요' }]}>
@@ -76,7 +80,7 @@ export function ReservationFormModal({ open, services, onCancel, onCreate }: Res
         <Form.Item name="memo" label="요청 메모">
           <Input.TextArea rows={3} placeholder="고객 요청사항을 입력해 주세요" />
         </Form.Item>
-        <Button type="primary" htmlType="submit" block>
+        <Button type="primary" htmlType="submit" block loading={loading}>
           예약 등록
         </Button>
       </Form>

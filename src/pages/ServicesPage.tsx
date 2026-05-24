@@ -8,11 +8,19 @@ const { Text } = Typography
 
 type ServicesPageProps = {
   services: Service[]
-  onCreateService: (values: ServiceFormValues) => void
-  onToggleServiceStatus: (serviceId: string) => void
+  isCreatingService: boolean
+  actionServiceId: string | null
+  onCreateService: (values: ServiceFormValues) => Promise<boolean>
+  onToggleServiceStatus: (serviceId: string) => Promise<void>
 }
 
-export function ServicesPage({ services, onCreateService, onToggleServiceStatus }: ServicesPageProps) {
+export function ServicesPage({
+  services,
+  isCreatingService,
+  actionServiceId,
+  onCreateService,
+  onToggleServiceStatus,
+}: ServicesPageProps) {
   const [keyword, setKeyword] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form] = Form.useForm<ServiceFormValues>()
@@ -51,7 +59,7 @@ export function ServicesPage({ services, onCreateService, onToggleServiceStatus 
       title: '작업',
       key: 'action',
       render: (_, service) => (
-        <Button onClick={() => onToggleServiceStatus(service.id)}>
+        <Button loading={actionServiceId === service.id} onClick={() => onToggleServiceStatus(service.id)}>
           {service.status === 'ACTIVE' ? '중지' : '재개'}
         </Button>
       ),
@@ -91,10 +99,13 @@ export function ServicesPage({ services, onCreateService, onToggleServiceStatus 
         <Form
           layout="vertical"
           form={form}
-          onFinish={(values) => {
-            onCreateService(values)
-            form.resetFields()
-            setIsModalOpen(false)
+          onFinish={async (values) => {
+            const isCreated = await onCreateService(values)
+
+            if (isCreated) {
+              form.resetFields()
+              setIsModalOpen(false)
+            }
           }}
         >
           <Form.Item name="name" label="서비스명" rules={[{ required: true, message: '서비스명을 입력해 주세요' }]}>
@@ -106,7 +117,7 @@ export function ServicesPage({ services, onCreateService, onToggleServiceStatus 
           <Form.Item name="price" label="가격" rules={[{ required: true, message: '가격을 입력해 주세요' }]}>
             <InputNumber min={0} step={1000} addonBefore="₩" className="full-width" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" block>
+          <Button type="primary" htmlType="submit" block loading={isCreatingService}>
             서비스 등록
           </Button>
         </Form>
