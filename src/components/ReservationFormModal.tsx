@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Alert, Button, DatePicker, Flex, Form, Input, Modal, Select, Space, TimePicker, Typography } from 'antd'
 import dayjs from 'dayjs'
 import type { NewReservationFormValues, Reservation, Service } from '../types'
-import { formatWon } from '../utils/reservation'
+import { businessHours, formatWon } from '../utils/reservation'
 
 const { Text } = Typography
 
@@ -27,6 +27,16 @@ export function ReservationFormModal({
   const selectedServiceId = Form.useWatch('serviceId', form)
   const selectedService = services.find((service) => service.id === selectedServiceId)
   const isEditMode = Boolean(editingReservation)
+  const disabledHours = () => {
+    return Array.from({ length: 24 }, (_, hour) => hour).filter(
+      (hour) => hour < businessHours.openHour || hour >= businessHours.closeHour,
+    )
+  }
+  const disabledMinutes = () => {
+    return Array.from({ length: 60 }, (_, minute) => minute).filter(
+      (minute) => minute % businessHours.intervalMinutes !== 0,
+    )
+  }
 
   useEffect(() => {
     if (!open) {
@@ -105,10 +115,22 @@ export function ReservationFormModal({
             <DatePicker className="full-width" />
           </Form.Item>
           <Form.Item name="time" label="시간" className="form-half" rules={[{ required: true }]}>
-            <TimePicker format="HH:mm" className="full-width" />
+            <TimePicker
+              format="HH:mm"
+              minuteStep={businessHours.intervalMinutes}
+              disabledTime={() => ({
+                disabledHours,
+                disabledMinutes,
+              })}
+              className="full-width"
+            />
           </Form.Item>
         </Flex>
-        <Alert type="warning" showIcon message="같은 날짜와 시간에는 하나의 예약만 등록할 수 있습니다" />
+        <Alert
+          type="warning"
+          showIcon
+          message="예약은 10:00-19:00 사이 5분 단위로만 가능하며, 같은 시간에는 하나의 예약만 등록할 수 있습니다"
+        />
         <Form.Item name="memo" label="요청 메모">
           <Input.TextArea rows={3} placeholder="고객 요청사항을 입력해 주세요" />
         </Form.Item>

@@ -1,5 +1,11 @@
 import type { ReservationStatus, ViewKey } from '../types'
 
+export const businessHours = {
+  openHour: 10,
+  closeHour: 19,
+  intervalMinutes: 5,
+}
+
 // 状态显示设置：状态值保留英文，页面显示韩文标签。
 export const statusColor: Record<ReservationStatus, string> = {
   REQUESTED: 'gold',
@@ -22,6 +28,18 @@ export const nextStatus: Partial<Record<ReservationStatus, ReservationStatus>> =
 
 export function formatWon(value: number) {
   return `₩${value.toLocaleString('ko-KR')}`
+}
+
+export function isValidBusinessTime(hour: number, minute: number) {
+  const totalMinutes = hour * 60 + minute
+  const openMinutes = businessHours.openHour * 60
+  const closeMinutes = businessHours.closeHour * 60
+
+  return (
+    totalMinutes >= openMinutes &&
+    totalMinutes < closeMinutes &&
+    minute % businessHours.intervalMinutes === 0
+  )
 }
 
 export function viewTitle(view: ViewKey) {

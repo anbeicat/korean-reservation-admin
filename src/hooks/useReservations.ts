@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Dayjs } from 'dayjs'
 import { createReservationMock, updateReservationMock, updateReservationStatusMock } from '../api/reservationApi'
 import type { NewReservationFormValues, Reservation, ReservationStatus } from '../types'
-import { nextStatus } from '../utils/reservation'
+import { isValidBusinessTime, nextStatus } from '../utils/reservation'
 
 type UseReservationsParams = {
   initialReservations: Reservation[]
@@ -44,6 +44,11 @@ export function useReservations({
         reservation.time === time
       )
     })
+  }
+
+  // 营业时间检查：防止用户通过手动输入提交非营业时间。
+  function hasInvalidBusinessTime(values: NewReservationFormValues) {
+    return !isValidBusinessTime(values.time.hour(), values.time.minute())
   }
 
   // 派生数据：根据当前状态、日期、关键词筛选条件得到表格要显示的预约。
@@ -105,6 +110,11 @@ export function useReservations({
 
   // 新增预约：通过 API 适配层创建预约对象，再追加到列表 state。
   async function createReservation(values: NewReservationFormValues) {
+    if (hasInvalidBusinessTime(values)) {
+      onError?.('영업시간은 10:00부터 19:00까지이며 5분 단위로 예약할 수 있습니다')
+      return false
+    }
+
     if (hasReservationConflict(values)) {
       onError?.('이미 같은 시간에 예약이 있습니다')
       return false
@@ -132,6 +142,11 @@ export function useReservations({
 
     if (!reservation) {
       onError?.('예약 정보를 찾을 수 없습니다')
+      return false
+    }
+
+    if (hasInvalidBusinessTime(values)) {
+      onError?.('영업시간은 10:00부터 19:00까지이며 5분 단위로 예약할 수 있습니다')
       return false
     }
 
